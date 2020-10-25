@@ -17,6 +17,7 @@ app.listen(PORT , ()=>{
 });
 
 app.get('/location' , handleLocation);
+app.get('/weather', handelWeather)
 
 function Location(search_query,formatted_query,latitude,longitude){
     this.search_query = search_query;
@@ -29,11 +30,12 @@ function Location(search_query,formatted_query,latitude,longitude){
 
 function handleLocation(req,res){
 let city = req.query.city;
-let jsonDate = require('./data/location.json');
-let jsonObject = jsonDate[0];
+let jsonData = require('./data/location.json');
+let jsonObject = jsonData[0];
 let locationObject = new Location(city, jsonObject.display_name , jsonObject.lat,jsonObject.lon);
 res.status(200).json(locationObject);
 }
+
 
 // we can use send(locationObject) isted of json(locationObject)
 // {
@@ -42,3 +44,47 @@ res.status(200).json(locationObject);
 //     "latitude": "47.606210",
 //     "longitude": "-122.332071"
 //   }
+function Weather(description,valid_date){
+    this.forcast = description;
+    
+    this.time = valid_date;
+}
+ function transform (value){
+    
+        var d = (new Date(value) + '').split(' ');
+        return [d[0], d[1], d[2], d[3]].join(' ');
+    }
+   
+
+
+
+
+function handelWeather(req,res){
+    let jsonData = require('./data/weather.json');
+    let jsonObject = jsonData.data;
+    let result = [];
+     jsonObject.forEach(element=>{
+         let forcast = element.weather.description;
+         let time = transform(Date.parse(element.valid_date))
+         let weatherObject = new Weather(forcast,time);
+        
+         result.push(weatherObject);
+     });
+
+     res.status(200).json(result);
+
+
+
+}
+
+// [
+//     {
+//       "forecast": "Partly cloudy until afternoon.",
+//       "time": "Mon Jan 01 2001"
+//     },
+//     {
+//       "forecast": "Mostly cloudy in the morning.",
+//       "time": "Tue Jan 02 2001"
+//     },
+//     ...
+//   ]
