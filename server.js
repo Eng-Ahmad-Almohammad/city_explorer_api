@@ -29,13 +29,17 @@ function Location(search_query,formatted_query,latitude,longitude){
 
 
 function handleLocation(req,res){
+    try{
 let city = req.query.city;
 let jsonData = require('./data/location.json');
 let jsonObject = jsonData[0];
 let locationObject = new Location(city, jsonObject.display_name , jsonObject.lat,jsonObject.lon);
 res.status(200).json(locationObject);
 }
-
+catch{
+res.status(500).send("Sorry, something went wrong");
+}
+}
 
 // we can use send(locationObject) isted of json(locationObject)
 // {
@@ -60,6 +64,7 @@ function Weather(description,valid_date){
 
 
 function handelWeather(req,res){
+    try{
     let jsonData = require('./data/weather.json');
     let jsonObject = jsonData.data;
     let result = [];
@@ -72,7 +77,9 @@ function handelWeather(req,res){
      });
 
      res.status(200).json(result);
-
+    }catch{
+        res.status(500).send("Sorry, something went wrong");  
+    }
 
 
 }
