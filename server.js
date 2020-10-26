@@ -84,7 +84,9 @@ function handelWeather(req,res){
      
 
      res.status(200).json(result);
-    })
+    }).catch(()=>{
+        res.send('error');
+    });
     
 
    
