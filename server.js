@@ -35,6 +35,7 @@ let jsonData = require('./data/location.json');
 let jsonObject = jsonData[0];
 let locationObject = new Location(city, jsonObject.display_name , jsonObject.lat,jsonObject.lon);
 res.status(200).json(locationObject);
+
 }
 catch{
 res.status(500).send("Sorry, something went wrong");
@@ -49,7 +50,7 @@ res.status(500).send("Sorry, something went wrong");
 //     "longitude": "-122.332071"
 //   }
 function Weather(description,valid_date){
-    this.forcast = description;
+    this.forecast = description;
     
     this.time = valid_date;
 }
@@ -77,6 +78,7 @@ function handelWeather(req,res){
      });
 
      res.status(200).json(result);
+
     }catch{
         res.status(500).send("Sorry, something went wrong");  
     }
