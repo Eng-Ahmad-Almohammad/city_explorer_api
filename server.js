@@ -68,7 +68,7 @@ function Weather(description,valid_date){
 
 
 function handelWeather(req,res){
-    let city = req.query.city;
+    let city = req.query.search_query;
         
     let key = process.env.WEATHER_API_KEY;
     superAgent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${city}&key=${key}`).then((data)=>{
