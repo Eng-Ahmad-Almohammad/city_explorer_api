@@ -1,8 +1,7 @@
 let express = require('express');
 
 let cors = require('cors');
-const { send } = require('process');
-const { json } = require('body-parser');
+
 
 let app = express();
 
@@ -17,14 +16,14 @@ app.listen(PORT , ()=>{
 });
 
 app.get('/location' , handleLocation);
-app.get('/weather', handelWeather)
+app.get('/weather', handelWeather);
 
 function Location(search_query,formatted_query,latitude,longitude){
     this.search_query = search_query;
     this.formatted_query = formatted_query;
     this.latitude = latitude;
     this.longitude = longitude;
-}
+};
 
 
 
@@ -68,14 +67,14 @@ function handelWeather(req,res){
     try{
     let jsonData = require('./data/weather.json');
     let jsonObject = jsonData.data;
-    let result = [];
-     jsonObject.forEach(element=>{
-         let forcast = element.weather.description;
-         let time = transform(Date.parse(element.valid_date))
-         let weatherObject = new Weather(forcast,time);
-        
-         result.push(weatherObject);
-     });
+    let result = jsonObject.map(function(element){
+        let forcast = element.weather.description;
+        let time = transform(Date.parse(element.valid_date))
+        let weatherObject = new Weather(forcast,time);
+       
+        return weatherObject;
+    });
+     
 
      res.status(200).json(result);
 
