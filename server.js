@@ -43,9 +43,6 @@ res.status(200).json(locationObject);
 });
 
 
-
-
-
 }
 
 // we can use send(locationObject) isted of json(locationObject)
@@ -71,9 +68,12 @@ function Weather(description,valid_date){
 
 
 function handelWeather(req,res){
-    try{
-    let jsonData = require('./data/weather.json');
-    let jsonObject = jsonData.data;
+    let city = req.query.city;
+        
+    let key = process.env.WEATHER_API_KEY;
+    superAgent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${city}&key=${key}`).then((data)=>{
+      
+    let jsonObject = data.body.data;
     let result = jsonObject.map(function(element){
         let forcast = element.weather.description;
         let time = transform(Date.parse(element.valid_date))
@@ -84,10 +84,10 @@ function handelWeather(req,res){
      
 
      res.status(200).json(result);
+    })
+    
 
-    }catch{
-        res.status(500).send("Sorry, something went wrong");  
-    }
+   
 
 
 }
