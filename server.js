@@ -2,6 +2,8 @@ let express = require('express');
 
 let cors = require('cors');
 
+let superAgent = require('superagent');
+
 
 let app = express();
 
@@ -28,17 +30,22 @@ function Location(search_query,formatted_query,latitude,longitude){
 
 
 function handleLocation(req,res){
-    try{
+    
 let city = req.query.city;
-let jsonData = require('./data/location.json');
-let jsonObject = jsonData[0];
-let locationObject = new Location(city, jsonObject.display_name , jsonObject.lat,jsonObject.lon);
+let key= process.env.GEOCODE_API_KEY;
+superAgent.get(`https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`).then((data)=>{
+    let jsonObject = data.body[0];
+    let locationObject = new Location(city, jsonObject.display_name , jsonObject.lat,jsonObject.lon);
 res.status(200).json(locationObject);
+}).catch(()=>{
+    res.send('error');
 
-}
-catch{
-res.status(500).send("Sorry, something went wrong");
-}
+});
+
+
+
+
+
 }
 
 // we can use send(locationObject) isted of json(locationObject)
