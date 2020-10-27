@@ -122,16 +122,16 @@ function Trials (name,location,length,stars,star_votes,summary,trail_url,conditi
 
 
 function handelTrail(req, res) {
-    let city = req.query.city;
-    let key = process.env.GEOCODE_API_KEY;
-    superAgent.get(`https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`).then((data) => {
-        let jsonObject = data.body[0];
-        var latit = jsonObject.lat;
-        var longit = jsonObject.lon;
+    // let city = req.query.city;
+    // let key = process.env.GEOCODE_API_KEY;
+    // superAgent.get(`https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`).then((data) => {
+    //     let jsonObject = data.body[0];
+    //     var latit = jsonObject.lat;
+    //     var longit = jsonObject.lon;
         
         
         let trailKey = process.env.TRAIL_API_KEY
-      superAgent.get(`https://www.hikingproject.com/data/get-trails?lat=${latit}&lon=${longit}&maxDistance=200&key=${trailKey}`).then((data) => {
+      superAgent.get(`https://www.hikingproject.com/data/get-trails?lat=${req.query.latitude}&lon=${req.query.longitude}&maxDistance=200&key=${trailKey}`).then((data) => {
           let jsonObject = data.body.trails;
           let result = jsonObject.map(function (element) {
              let trailsObject = new Trials(element.name,element.location,element.length,element.stars,element.starVotes,element.summary,element.url,element.conditionStatus,element.conditionDate);
@@ -143,9 +143,9 @@ function handelTrail(req, res) {
       }).catch(() => {
           res.send('error');
       });
-    }).catch(()=>{
-        res.send('error');
-    })
+    // }).catch(()=>{
+    //     res.send('error');
+    // })
     
 
 
