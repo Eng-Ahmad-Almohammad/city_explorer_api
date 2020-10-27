@@ -4,22 +4,37 @@ let cors = require('cors');
 
 let superAgent = require('superagent');
 
+let pg = require('pg');
+
 
 let app = express();
 
 app.use(cors());
 
 require('dotenv').config();
-
+const DATABASE_URL = process.env.DATABASE_URL;
+let client = new pg.Client(DATABASE_URL);
 const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
-    console.log('app is listning on port' + PORT);
-});
 
-app.get('/location', handleLocation);
+
+app.get('/location', checkLocation);
 app.get('/weather', handelWeather);
 app.get('/trails', handelTrail);
+
+function checkLocation(req, res) {
+    let city = req.query.city;
+    client.query(`SELECT search_query, formatted_query, latitude, longitude FROM cityexplorer WHERE search_query = '${city}'`).then((data) => {
+      if(data.rowCount===0){
+          handleLocation(city,res);
+      }else {
+        res.status(200).json(data.rows[0]);
+        console.log('hello');
+      }
+       
+        
+    })
+}
 
 function Location(search_query, formatted_query, latitude, longitude) {
     this.search_query = search_query;
@@ -30,14 +45,15 @@ function Location(search_query, formatted_query, latitude, longitude) {
 
 
 
-function handleLocation(req, res) {
+function handleLocation(city, res) {
 
-    let city = req.query.city;
+    
     let key = process.env.GEOCODE_API_KEY;
     superAgent.get(`https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`).then((data) => {
         let jsonObject = data.body[0];
         let locationObject = new Location(city, jsonObject.display_name, jsonObject.lat, jsonObject.lon);
         res.status(200).json(locationObject);
+        client.query(`INSERT INTO cityexplorer(search_query, formatted_query, latitude, longitude) values ('${locationObject.search_query}', '${locationObject.formatted_query}','${locationObject.latitude}', '${locationObject.longitude}')`)
     }).catch(() => {
         res.send('error');
 
@@ -106,7 +122,7 @@ function handelWeather(req, res) {
 //     },
 //     ...
 //   ]
-function Trials (name,location,length,stars,star_votes,summary,trail_url,conditions,condition_date){
+function Trials(name, location, length, stars, star_votes, summary, trail_url, conditions, condition_date) {
     this.name = name;
     this.location = location;
     this.length = length;
@@ -115,8 +131,8 @@ function Trials (name,location,length,stars,star_votes,summary,trail_url,conditi
     this.summary = summary;
     this.trail_url = trail_url;
     this.conditions = conditions;
-    this.condition_date = condition_date.slice(0,9);
-    this.condition_time = condition_date.slice(11,18);
+    this.condition_date = condition_date.slice(0, 9);
+    this.condition_time = condition_date.slice(11, 18);
 }
 
 
@@ -128,25 +144,25 @@ function handelTrail(req, res) {
     //     let jsonObject = data.body[0];
     //     var latit = jsonObject.lat;
     //     var longit = jsonObject.lon;
-        
-        
-        let trailKey = process.env.TRAIL_API_KEY
-      superAgent.get(`https://www.hikingproject.com/data/get-trails?lat=${req.query.latitude}&lon=${req.query.longitude}&maxDistance=200&key=${trailKey}`).then((data) => {
-          let jsonObject = data.body.trails;
-          let result = jsonObject.map(function (element) {
-             let trailsObject = new Trials(element.name,element.location,element.length,element.stars,element.starVotes,element.summary,element.url,element.conditionStatus,element.conditionDate);
-             return trailsObject ;
-          });
-    
-    
-          res.status(200).json(result);
-      }).catch(() => {
-          res.send('error');
-      });
+
+
+    let trailKey = process.env.TRAIL_API_KEY
+    superAgent.get(`https://www.hikingproject.com/data/get-trails?lat=${req.query.latitude}&lon=${req.query.longitude}&maxDistance=200&key=${trailKey}`).then((data) => {
+        let jsonObject = data.body.trails;
+        let result = jsonObject.map(function (element) {
+            let trailsObject = new Trials(element.name, element.location, element.length, element.stars, element.starVotes, element.summary, element.url, element.conditionStatus, element.conditionDate);
+            return trailsObject;
+        });
+
+
+        res.status(200).json(result);
+    }).catch(() => {
+        res.send('error');
+    });
     // }).catch(()=>{
     //     res.send('error');
     // })
-    
+
 
 
 }
@@ -177,3 +193,11 @@ function handelTrail(req, res) {
 //     },
 //     ...
 //   ]
+
+client.connect().then(() => {
+    app.listen(PORT, () => {
+        console.log('app is listning on port' + PORT);
+    });
+}).catch(err => {
+    console.log('Sorry there is an error' + err);
+});
