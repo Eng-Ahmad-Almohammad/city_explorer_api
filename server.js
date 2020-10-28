@@ -22,6 +22,7 @@ app.get('/location', checkLocation);
 app.get('/weather', handelWeather);
 app.get('/trails', handelTrail);
 app.get('/movies',handelMovies);
+app.get('/yelp', handelYelp);
 
 function checkLocation(req, res) {
     let city = req.query.city;
@@ -50,6 +51,7 @@ function handleLocation(city, res) {
 
     
     let key = process.env.GEOCODE_API_KEY;
+
     superAgent.get(`https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`).then((data) => {
         let jsonObject = data.body[0];
         let locationObject = new Location(city, jsonObject.display_name, jsonObject.lat, jsonObject.lon);
@@ -243,6 +245,59 @@ function handelMovies(req , res){
 //   },
 //   ...
 // ]
+
+function Yelp(name,image_url,price,rating,url){
+this.name = name;
+this.image_url=image_url;
+this.price = price;
+this.rating = rating;
+this.url = url;
+}
+
+var page = 1;
+function handelYelp(req,res){
+    let city= req.query.search_query;
+    let key = process.env.YELP_API_KEY;
+    const pageNum = 5;
+    const start = ((page-1)*pageNum+1);
+     let obj = {location:city,
+    limit:pageNum,
+offset:start};
+page++;
+    superAgent.get(`https://api.yelp.com/v3/businesses/search`).query(obj).set('Authorization', `Bearer ${key}`).then(data=>{
+        let jsonObject= data.body.businesses;
+        let result = jsonObject.map(value=>{
+            let YelpObject = new Yelp(value.name,value.image_url,value.price,value.rating,value.url);
+            return YelpObject;
+        })
+        res.status(200).json(result);
+    }).catch(() => {
+        res.send('error');
+    
+
+    })
+    
+}
+
+
+// [
+//     {
+//       "name": "Pike Place Chowder",
+//       "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/ijju-wYoRAxWjHPTCxyQGQ/o.jpg",
+//       "price": "$$   ",
+//       "rating": "4.5",
+//       "url": "https://www.yelp.com/biz/pike-place-chowder-seattle?adjust_creative=uK0rfzqjBmWNj6-d3ujNVA&utm_campaign=yelp_api_v3&utm_medium=api_v3_business_search&utm_source=uK0rfzqjBmWNj6-d3ujNVA"
+//     },
+//     {
+//       "name": "Umi Sake House",
+//       "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c-XwgpadB530bjPUAL7oFw/o.jpg",
+//       "price": "$$   ",
+//       "rating": "4.0",
+//       "url": "https://www.yelp.com/biz/umi-sake-house-seattle?adjust_creative=uK0rfzqjBmWNj6-d3ujNVA&utm_campaign=yelp_api_v3&utm_medium=api_v3_business_search&utm_source=uK0rfzqjBmWNj6-d3ujNVA"
+//     },
+//     ...
+//   ]
+
 
 client.connect().then(() => {
     app.listen(PORT, () => {
