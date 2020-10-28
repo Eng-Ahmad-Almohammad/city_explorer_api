@@ -21,6 +21,7 @@ const PORT = process.env.PORT;
 app.get('/location', checkLocation);
 app.get('/weather', handelWeather);
 app.get('/trails', handelTrail);
+app.get('/movies',handelMovies);
 
 function checkLocation(req, res) {
     let city = req.query.city;
@@ -193,6 +194,55 @@ function handelTrail(req, res) {
 //     },
 //     ...
 //   ]
+ function Movies (title,overview,average_votes,total_votes,image_url,popularity,released_on){
+    this.title = title;
+    this.overview = overview;
+    this.average_votes = average_votes;
+    this.total_votes = total_votes;
+    this.image_url = image_url;
+    this.popularity = popularity;
+    this.released_on = released_on;
+
+ }
+
+function handelMovies(req , res){
+    let city= req.query.search_query;
+    let key = process.env.MOVIE_API_KEY
+    superAgent.get(`https://api.themoviedb.org/3/search/movie?api_key=${key}&query=${city}`).then(data=>{
+        let jsonObject = data.body.results;
+        let result = jsonObject.map(value=>{
+            let movieObject = new Movies(value.title,value.overview,value.vote_average,value.vote_count,value.poster_path,value.popularity,value.release_date);
+            return movieObject;
+        })
+        res.status(200).json(result);
+    }).catch(() => {
+        res.send('error');
+    });
+
+}
+
+
+// [
+//   {
+//     "title": "Sleepless in Seattle",
+//     "overview": "A young boy who tries to set his dad up on a date after the death of his mother. He calls into a radio station to talk about his dad’s loneliness which soon leads the dad into meeting a Journalist Annie who flies to Seattle to write a story about the boy and his dad. Yet Annie ends up with more than just a story in this popular romantic comedy.",
+//     "average_votes": "6.60",
+//     "total_votes": "881",
+//     "image_url": "https://image.tmdb.org/t/p/w500/afkYP15OeUOD0tFEmj6VvejuOcz.jpg",
+//     "popularity": "8.2340",
+//     "released_on": "1993-06-24"
+//   },
+//   {
+//     "title": "Love Happens",
+//     "overview": "Dr. Burke Ryan is a successful self-help author and motivational speaker with a secret. While he helps thousands of people cope with tragedy and personal loss, he secretly is unable to overcome the death of his late wife. It's not until Burke meets a fiercely independent florist named Eloise that he is forced to face his past and overcome his demons.",
+//     "average_votes": "5.80",
+//     "total_votes": "282",
+//     "image_url": "https://image.tmdb.org/t/p/w500/pN51u0l8oSEsxAYiHUzzbMrMXH7.jpg",
+//     "popularity": "15.7500",
+//     "released_on": "2009-09-18"
+//   },
+//   ...
+// ]
 
 client.connect().then(() => {
     app.listen(PORT, () => {
